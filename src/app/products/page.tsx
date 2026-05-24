@@ -1,6 +1,4 @@
 // src/app/products/page.tsx
-// Server component — fetches products on the server and passes to client grid.
-
 import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/shared/product-grid";
 import type { Metadata } from "next";
@@ -10,11 +8,9 @@ export const metadata: Metadata = {
   description: "Browse products and reserve stock across warehouses.",
 };
 
-// Revalidate every 30 seconds so the page stays relatively fresh
 export const revalidate = 30;
 
 async function getProducts() {
-  // Lazy-expire stale reservations before rendering
   const now = new Date();
   const expired = await prisma.reservation.findMany({
     where: { status: "PENDING", expiresAt: { lt: now } },
@@ -52,17 +48,26 @@ async function getProducts() {
   });
 
   return rawProducts.map((p) => ({
-    ...p,
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    sku: p.sku,
     price: Number(p.price),
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
     inventory: p.inventory.map((inv) => ({
-      ...inv,
+      id: inv.id,
+      productId: inv.productId,
+      warehouseId: inv.warehouseId,
+      totalStock: inv.totalStock,
+      reservedStock: inv.reservedStock,
+      availableStock: Math.max(0, inv.totalStock - inv.reservedStock),
       createdAt: inv.createdAt.toISOString(),
       updatedAt: inv.updatedAt.toISOString(),
-      availableStock: Math.max(0, inv.totalStock - inv.reservedStock),
       warehouse: {
-        ...inv.warehouse,
+        id: inv.warehouse.id,
+        name: inv.warehouse.name,
+        location: inv.warehouse.location,
         createdAt: inv.warehouse.createdAt.toISOString(),
         updatedAt: inv.warehouse.updatedAt.toISOString(),
       },
