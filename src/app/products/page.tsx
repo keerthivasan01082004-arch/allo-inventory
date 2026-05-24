@@ -52,6 +52,7 @@ async function getProducts() {
     name: p.name,
     description: p.description,
     sku: p.sku,
+    imageUrl: p.imageUrl ?? null,
     price: Number(p.price),
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
