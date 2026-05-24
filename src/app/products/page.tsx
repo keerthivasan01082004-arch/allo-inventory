@@ -41,7 +41,7 @@ async function getProducts() {
     ]);
   }
 
-  const products = await prisma.product.findMany({
+  const rawProducts = await prisma.product.findMany({
     include: {
       inventory: {
         include: { warehouse: true },
@@ -51,12 +51,21 @@ async function getProducts() {
     orderBy: { name: "asc" },
   });
 
-  return products.map((p) => ({
+  return rawProducts.map((p) => ({
     ...p,
     price: Number(p.price),
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
     inventory: p.inventory.map((inv) => ({
       ...inv,
+      createdAt: inv.createdAt.toISOString(),
+      updatedAt: inv.updatedAt.toISOString(),
       availableStock: Math.max(0, inv.totalStock - inv.reservedStock),
+      warehouse: {
+        ...inv.warehouse,
+        createdAt: inv.warehouse.createdAt.toISOString(),
+        updatedAt: inv.warehouse.updatedAt.toISOString(),
+      },
     })),
   }));
 }
